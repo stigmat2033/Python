@@ -11,10 +11,10 @@ for x in range(0,len(text)):
 			if i.find(tag2) != -1:
 				i=i.replace((', '+tag2),'')
 				text[x]=i
-				с+=1
+				c+=1
 	x+=1
 text=''.join(text)
 file=open('pkgstates_new','w')
 file.write(text)
 file.close
-print('Изменено: '+str(x)+' строк')
+print('Total changes: '+str(c))

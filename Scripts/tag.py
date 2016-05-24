@@ -1,19 +1,20 @@
-file=open('pkgstates','r+x')
-out=open('pkgstates_new','w')
-text=file.readlines()
-tag1='init'
-tag2='kde'
-i=''
-for x in range(0,len(text)):
-	i=text[x]
-	if i.startswith('User-Tags:'):
-		if i.find(tag1) != -1:
-			if i.find(tag2) != -1:
-				i=i.replace((', '+tag2),'')
-				text[x]=i
-				print(i)
-	x+=1
-text=''.join(text)
-out.write(text)
-file.close
-out.close
+tag1='init' #Тег с которого будет удалять
+tag2='kde' #Тег который будем удалять
+c=0 #Счётчик исправленных строк
+file=open('pkgstates','r') #Открываем файл с описаниями пакетов с правами на чтение
+text=file.readlines() #Присваиваем переменной text все строки из файла
+file.close #Отпускаем файл
+for x in range(0,len(text)): #Переменная x- счётчик цикла в промежутке от 0 до количества строк в переменной text
+	i=text[x] #Присваиваем переменной i строку по счётчику x
+	if i.startswith('User-Tags:'): #Если строка начинается с 'User-Tags:' то:
+		if i.find(tag1) != -1: #Если в строке есть тег с которого надо удалить тег то:
+			if i.find(tag2) != -1: #Если в строке есть удаляемый тег то:
+				i=i.replace((', '+tag2),'') #Заменяем тег на "ничего"
+				text[x]=i #Возвращаем исправленную строку на место
+				с+=1 #Счётчик увеличивается на 1
+	x+=1 #Счётчик цикла увеличивается на 1
+text=''.join(text) #Собираем список в строку
+file=open('pkgstates_new','w') #Создаём файл для записи исправленного списка
+file.write(text) #Записываем изменения в файл
+file.close #Отпускаем файл
+print('Изменено: '+str(x)+' строк') #Сообщаем сколько строк изменили

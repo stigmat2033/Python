@@ -5,12 +5,10 @@ file=open('pkgstates','r')
 text=file.readlines()
 file.close
 for x in range(0,len(text)):
-	i=text[x]
-	if i.startswith('User-Tags:'):
-		if i.find(tag1) != -1:
-			if i.find(tag2) != -1:
-				i=i.replace((' '+tag2),'')
-				text[x]=i
+	if text[x].startswith('User-Tags:'):
+		if text[x].find(tag1) != -1:
+			if text[x].find(tag2) != -1:
+				text[x].replace((' '+tag2),'')
 				c+=1
 	x+=1
 text=''.join(text)

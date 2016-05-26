@@ -1,7 +1,8 @@
-tag1='kde'
-tag2='ntp'
-c=0
-file=open('pkgstates','r')
+#!/usr/bin/python3.4
+tag1='init' #Тег с которого удаляем
+tag2='kde' #Тег который удаляем
+c=0 #Счётчик изменений
+file=open('pkgstates','r') #Открываем файл со статусами пакетов
 text=file.readlines()
 file.close
 for x in range(0,len(text)):

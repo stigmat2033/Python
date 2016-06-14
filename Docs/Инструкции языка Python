@@ -1,0 +1,28 @@
+Инструкция              Роль                Пример
+Присваивание            Создание ссылок     a, *b = ‘good’, ‘bad’, ‘ugly’ 
+
+Вызовы и другие         Запуск функций      log.write(“spam, ham”)
+выражения
+
+Вызов функции           Вывод объектов      print(‘The Killer’, joke) 
+print
+
+if/elif/else            Операция выбора     if “python” in text:  print(text) 
+for/else Обход последовательности в цикле for x in mylist:print(x) 
+while/else Циклы общего назначения while X > Y:print(‘hello’) 
+pass Пустая инструкциязаполнитель while True:pass break 
+Выход из цикла while True:if exittest(): break 
+continue Переход в начало цикла while True:if skiptest(): continue 
+def Создание функций  и методов def f(a, b, c=1, *d):print(a+b+c+d[0])
+return Возврат результата def f(a, b, c=1, *d):return a+b+c+d[0]
+yield Функции-генераторы def gen(n):for i in n: yield i*2 
+global Пространства имен x = ‘old’ def function():global x, y; x = ‘new’ 
+nonlocal Пространства имен (3.0+) def outer():x = ‘old’ def function():      nonlocal x; x = ‘new’ 
+import Доступ к модулям import sys 
+from Доступ к атрибутам  модуля from sys import stdin 
+class Создание объектов class Subclass(Superclass):staticData = []    def method(self): pass 
+try/except/finally Обработка исключений try:    action() except:    print(‘action error’) 
+raise Возбуждение исключений raise endSearch(location) 
+assert Отладочные проверки assert X > Y, ‘X too small’ 
+with/as Менеджеры контекста (2.6+) with open(‘data’) as myfile:    process(myfile) 
+del Удаление ссылок del data[k] del data[i:j] del obj.attr del variable

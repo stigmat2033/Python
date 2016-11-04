@@ -21,10 +21,9 @@ for eventType in items.keys():
                     r'https://api.guildwars2.com/v2/items/' + str(a['id'])
                 ).read().decode('UTF-8')
             )
-            event['rewards'].pop(
-                event['rewards'].index(a)
-            )
-            event['rewards'].append(buf)
+            b = event['rewards'].index(a)
+            event['rewards'].pop(b)
+            event['rewards'].insert(b,buf)
         buf = items[eventType].index(event)
         items[eventType].pop(buf)
         items[eventType].insert(buf,event)

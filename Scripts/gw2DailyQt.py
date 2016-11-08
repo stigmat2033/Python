@@ -1,11 +1,11 @@
 import sys, urllib.request, json
-from PyQt5.QtWidgets import QApplication, QWidget, QFrame, QVBoxLayout, QGridLayout, QScrollArea, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QFrame, QVBoxLayout, QGridLayout, QScrollArea, QLabel, QProgressBar
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap
 
 class loadThread(QThread):
     signal = pyqtSignal(bytes,str)
-    def __init__(self, url, arg):
+    def __init__(self, url, arg=''):
         super().__init__()
         self.url = url
         self.arg = str(arg)
@@ -112,9 +112,61 @@ class application(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
         self.window = window()
-        # self.window.resize(600,600)
+        self.window.show()
+        self.exit(self.exec_())
+
+class launcherWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.vbox = QVBoxLayout()
+
+        self.status = QLabel()
+        self.bar = QProgressBar()
+
+        self.vbox.addWidget(self.status)
+        self.vbox.addWidget(self.bar)
+        self.setLayout(self.vbox)
+
+        self.total = 0
+        self.data = {}
+        self.threads = []
+
+        self.thread = loadThread(r'https://api.guildwars2.com/v2/achievements/daily')
+        self.thread.signal.connect(self.getData, Qt.QueuedConnection)
+        self.thread.start()
+        self.threads.append(loadThread(r'https://wiki.guildwars2.com/images/c/ca/Explorer.png','pve'))
+        self.threads.append(loadThread(r'https://wiki.guildwars2.com/images/e/e1/Hall_of_Monuments_%28achievement%29.png','special'))
+        self.threads.append(loadThread(r'https://wiki.guildwars2.com/images/c/ca/PvP_Conqueror.png','pvp'))
+        self.threads.append(loadThread(r'https://wiki.guildwars2.com/images/d/d2/World_vs_World.png','wvw'))
+
+        for i in self.threads:
+            i.signal.connect(self.addData, Qt.QueuedConnection)
+            i.start()
+
+    def addData(self, signal, flag):
+        print(flag)
+        self.data.setdefault(flag, signal)
+        self.total += 1
+        print(str(self.total))
+
+    def getData(self, signal, flag):
+        items = json.loads(signal.decode('UTF-8'))
+        print(items)
+        ids = ''
+        for metaEvent in items.keys():
+            for event in items[metaEvent]:
+                ids = ids + str(event['id']) + ','
+        self.thread = loadThread(r'https://api.guildwars2.com/v2/achievements?ids='+ids.rstrip(','),'daily')
+        self.thread.signal.connect(self.addData, Qt.QueuedConnection)
+        self.thread.start()
+
+class launcher(QApplication):
+    def __init__(self):
+        super().__init__(sys.argv)
+        self.window = launcherWindow()
         self.window.show()
         self.exit(self.exec_())
 
 if __name__ == '__main__':
-    app = application()
+    data = launcher()
+    # app = application()

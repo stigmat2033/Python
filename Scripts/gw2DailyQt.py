@@ -2,23 +2,15 @@ import sys, urllib.request, json
 from PyQt5.QtWidgets import QWidget, QApplication, QLabel, QGridLayout, QTabWidget, QFrame, QVBoxLayout
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
-class loadThread(QThread):
-    metaEventSignal = pyqtSignal(str)
-    eventSignal = pyqtSignal(dict,str)
-    def __init__(self, url, events = None, metaEvent=None):
+class loadDataThread(QThread):
+    # Тред для загрузки текстовой информации (json)
+    signal = pyqtSignal(str)
+    def __init__(self, url):
         super().__init__()
         self.url = url
-        self.event = events
-        self.metaEvent = metaEvent
 
     def run(self):
-        if self.event == None:
-            self.metaEventSignal.emit(urllib.request.urlopen(self.url).read().decode('UTF-8'))
-        if self.event != None:
-            items = json.loads(urllib.request.urlopen(self.url+str(self.event['id'])).read().decode('UTF-8'))
-            for i in items[0].keys():
-                self.event.setdefault(i,items[0][i])
-            self.eventSignal.emit(self.event,self.metaEvent)
+        self.signal.emit(urllib.request.urlopen(self.url).read().decode('UTF-8'))
 
 class itemWindow(QWidget):
     def __init__(self,item):
@@ -89,60 +81,85 @@ class label(QLabel):
     def mouseReleaseEvent(self, QMouseEvent):
         self.signal.emit(self.event)
 
-class frame(QFrame):
+class frame(QWidget):
     def __init__(self):
         super().__init__()
-        self.grid = QGridLayout()
+        self.vbox = QVBoxLayout()
 
-        self.setLayout(self.grid)
+        self.setLayout(self.vbox)
 
-    def addEvent(self, event):
-        setattr(self,str(event['id']),label(event))
-        getattr(self,str(event['id'])).setText(event['name'])
-        getattr(self, str(event['id'])).signal.connect(self.setEventWindow)
-        self.grid.addWidget(getattr(self,str(event['id'])))
-        self.resize(self.grid.sizeHint())
+        self.threads = []
+
+    def getEvent(self, event):
+        self.threads.append(loadDataThread(r'https://api.guildwars2.com/v2/achievements?id='+str(event['id'])))
+        self.threads[-1].signal.connect(self.addEvent, Qt.QueuedConnection)
+        self.threads[-1].start()
+
+    def addEvent(self, signal):
+        signal = json.loads(signal)
+        print(type(signal))
+        setattr(self,str(signal['id']),label(signal))
+        getattr(self,str(signal['id'])).setText(signal['name'])
+        getattr(self, str(signal['id'])).signal.connect(self.setEventWindow)
+        self.vbox.addWidget(getattr(self,str(signal['id'])))
+        # self.resize(self.grid.sizeHint())
 
     def setEventWindow(self, event):
         self.eventWindow = eventWindow(event)
         self.eventWindow.show()
 
-class window(QWidget):
+class dailyTab(QWidget):
     def __init__(self):
         super().__init__()
+        # Виджет для дейлков
+        # Содержит содержит главный таб виджет для дейликов
         self.tab = QTabWidget()
 
-        self.grid = QGridLayout()
-        self.grid.setSpacing(1)
-        self.grid.addWidget(self.tab,1,1)
-        self.setLayout(self.grid)
+        self.vbox = QVBoxLayout()
+        self.vbox.addWidget(self.tab)
+        self.setLayout(self.vbox)
 
         self.threads = []
-
-        self.metaEvent = loadThread(r'https://api.guildwars2.com/v2/achievements/daily')
-        self.metaEvent.metaEventSignal.connect(self.getEvent, Qt.QueuedConnection)
-        self.metaEvent.start()
+        # При ините создаём тред для получения дейликов
+        self.loadDataThread = loadDataThread(r'https://api.guildwars2.com/v2/achievements/daily')
+        self.loadDataThread.signal.connect(self.getEvent, Qt.QueuedConnection)
+        self.loadDataThread.start()
 
     def getEvent(self, signal):
-        items = json.loads(signal)
-        for metaEvent in items.keys():
-            setattr(self,'{}Tab'.format(metaEvent),frame())
-            self.tab.addTab(getattr(self,'{}Tab'.format(metaEvent)),metaEvent)
-            for event in items[metaEvent]:
-                self.threads.append(loadThread(r'https://api.guildwars2.com/v2/achievements?ids=',events=event, metaEvent= metaEvent))
-                self.threads[-1].eventSignal.connect(self.addTab, Qt.QueuedConnection)
-                self.threads[-1].start()
+        signal = json.loads(signal)
+        for metaEvent in signal.keys():
+            setattr(self,metaEvent,frame())
+            self.tab.addTab(getattr(self,metaEvent),metaEvent)
+            for event in signal[metaEvent]:
+                if (event['level']['max'] == 80 and metaEvent == 'pve') or metaEvent != 'pve':
+                    getattr(self,metaEvent).getEvent(event)
 
     def addTab(self, event, metaEvent):
         getattr(self,'{}Tab'.format(metaEvent)).addEvent(event)
 
         self.resize(self.grid.sizeHint())
 
+class mainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        # Виджет для главного таб виджета
+        # Содержит вкладки для дейликов и т.д.
+        self.vbox = QVBoxLayout()
+
+        self.dailyTab = dailyTab()
+
+        self.tab = QTabWidget()
+        self.tab.addTab(self.dailyTab,'Daily events')
+
+        self.vbox.addWidget(self.tab)
+        self.setLayout(self.vbox)
+
 class application(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
-        self.window = window()
-        self.window.show()
+        self.mainWindow = mainWindow()
+        self.mainWindow.resize(400,400)
+        self.mainWindow.show()
         self.exit(self.exec_())
 
 if __name__ == '__main__':

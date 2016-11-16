@@ -11,7 +11,7 @@ class ServerThread(QThread):
     def run(self):
         self.messages = []
         self.baseId = 0
-        server = SimpleXMLRPCServer(('10.60.46.59',9999),allow_none=True)
+        server = SimpleXMLRPCServer(('localhost',9999),allow_none=True)
         server.register_function(self.sendMessage)
         server.register_function(self.getId)
         server.register_function(self.getMessages)

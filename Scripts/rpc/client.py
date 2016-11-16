@@ -4,7 +4,7 @@ import time
 from PyQt5.QtWidgets import QApplication, QWidget, QTextEdit, QLineEdit, QPushButton, QGridLayout
 from PyQt5.QtCore import QThread, Qt, pyqtSignal
 
-client = xmlrpc.client.ServerProxy('http://10.60.46.59:9999')
+client = xmlrpc.client.ServerProxy('http://localhost:9999')
 
 class updateThread(QThread):
     signal = pyqtSignal(str)
